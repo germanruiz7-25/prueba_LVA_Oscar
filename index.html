@@ -322,7 +322,7 @@ tr:hover td{background:#fafcfd}
 
     <div class="card">
       <h2>Conexión con Base de Datos Google Sheets / Excel (Apps Script)</h2>
-      <p class="small">Pegue aquí la URL de aplicación web generada en Google Apps Script (terminada en <code>/exec</code>) para que cada reporte guardado se registre automáticamente en su hoja de cálculo en la nube.</p>
+      <p class="small">La URL de conexión con Google Sheets ya está integrada de forma predeterminada en el sistema para todos los programas.</p>
       <div class="toolbar">
         <input id="webhookInput" type="url" style="flex:1;min-width:300px" placeholder="https://script.google.com/macros/s/.../exec">
         <button class="btn primary" onclick="saveWebhook()">Guardar enlace de sincronización</button>
@@ -342,6 +342,8 @@ tr:hover td{background:#fafcfd}
 </main>
 
 <script>
+const DEFAULT_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzPk69zSwP3nfMnh70-zUvt8BZfmZjujnxTd_MtSAp2XRA3R7gOSRfDJx2sv0keZTulbw/exec";
+
 const ROLE_MAP = {
   gpyc:{key:"gpyc", name:"GPyC · Administrador", program:null, admin:true},
   ceh:{key:"ceh", name:"CeH", program:"CeH", admin:false},
@@ -385,7 +387,7 @@ const SEED = {
   "programs": ["CeH", "DCyD", "DG", "DO", "Especialista en Cuencas", "GdR", "Gestor del Conocimiento", "MIC", "SSP", "Todos"],
   "passwords": {...DEFAULT_PASSWORDS},
   "adminNarrative": DEFAULT_NARRATIVE,
-  "webhookUrl": "",
+  "webhookUrl": DEFAULT_WEBHOOK_URL,
   "activities": [
     {"id": "1.1.1", "activity": "1.1.1 Instalación de nueva estación meteorológica parte alta cuenca río Guacalate", "program": "CeH", "start": 2022, "end": 2023, "baseline": "No hay estación", "expected": "Estación en funcionamiento en parte alta de la cuenca y datos de 5 años", "prior_progress": 25.0, "prior_notes": "En gestiones para su instalación"},
     {"id": "1.1.2", "activity": "1.1.2 Elaborar y distribución de boletines meteorológicos para las mesas agroclimáticas y pequeños productores", "program": "CeH", "start": 2023, "end": 2026, "baseline": "No se generan boletines para mesas y pequeños productores", "expected": "5 mesas agroclimáticas departamentales reciben información periodicamente\nComunidades y grupos de productores reciben información relevante para sus cultivos", "prior_progress": 80.0, "prior_notes": "Participación en reuniones de MTA (Sololá, Escuintla, Suchitepequez-Retalhuleu, Santa Rosa y Chimaltenango).\nGeneración de boletines agroclimáticos\nPequeños agricultores: Chimaltenango y Santa Rosa (2 cada uno)"},
@@ -470,6 +472,7 @@ const SEED = {
 const KEY = "icc_lva_tracking_v2";
 let db = JSON.parse(localStorage.getItem(KEY) || "null") || JSON.parse(JSON.stringify(SEED));
 if(!db.adminNarrative) db.adminNarrative = {...DEFAULT_NARRATIVE};
+if(!db.webhookUrl) db.webhookUrl = DEFAULT_WEBHOOK_URL;
 db.passwords = {...DEFAULT_PASSWORDS, ...(db.passwords || {})};
 
 function saveDB(){
@@ -747,7 +750,7 @@ function renderActivityHistory(aid){
 }
 
 async function syncToCloudExcel(payload){
-  const url = (db.webhookUrl || "").trim();
+  const url = (db.webhookUrl || DEFAULT_WEBHOOK_URL).trim();
   if(!url) return false;
   try{
     const res = await fetch(url, {
@@ -813,7 +816,7 @@ async function saveUpdate(){
   saveDB();
 
   const synced = await syncToCloudExcel(payload);
-  const msgSync = db.webhookUrl ? (synced ? "\n✓ Sincronizado con la base de datos Google Sheets." : "\n⚠ Guardado localmente (verifique la URL de Google Apps Script).") : "";
+  const msgSync = synced ? "\n✓ Sincronizado con la base de datos Google Sheets." : "\n⚠ Guardado localmente (verifique conexión a internet o permisos de Apps Script).";
   alert(`Reporte de ${period} ${year} guardado correctamente.${msgSync}`);
   clearEntry();
 }
@@ -1160,7 +1163,7 @@ function exportCSV(){
 
 function saveWebhook(){
   if(!currentUser?.admin){alert("Solo el administrador puede configurar el enlace de sincronización.");return;}
-  db.webhookUrl = document.getElementById("webhookInput").value.trim();
+  db.webhookUrl = document.getElementById("webhookInput").value.trim() || DEFAULT_WEBHOOK_URL;
   saveDB();
   alert("Enlace de sincronización guardado correctamente.");
 }
@@ -1178,13 +1181,13 @@ function resetDemo(){
 
 function updatePreview(){
   const whInput = document.getElementById("webhookInput");
-  if(whInput && document.activeElement !== whInput) whInput.value = db.webhookUrl || "";
+  if(whInput && document.activeElement !== whInput) whInput.value = db.webhookUrl || DEFAULT_WEBHOOK_URL;
   const st = document.getElementById("syncStatus");
-  if(st) st.innerHTML = db.webhookUrl ? `<span class="badge ok">Sincronización activa con Google Sheets / Apps Script</span>` : `<span class="badge warn">Modo local activo (pegue la URL de Google Apps Script para enviar datos a Google Sheets)</span>`;
+  if(st) st.innerHTML = `<span class="badge ok">Sincronización activa con Google Sheets / Apps Script</span>`;
   document.getElementById("dataPreview").textContent=JSON.stringify({
     totalActividades: db.activities.length,
     totalRegistros: db.updates.length,
-    sincronizacionActiva: Boolean(db.webhookUrl),
+    sincronizacionActiva: true,
     programas: programs()
   },null,2);
 }
