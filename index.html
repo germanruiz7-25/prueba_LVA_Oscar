@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ICC · Seguimiento Plan de Trabajo FLvA</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f1f4f7;
+  --card:#ffffff;
+  --ink:#16202a;
+  --muted:#5c6975;
+  --line:#dce3e9;
+  --accent:#176b87;
+  --accent2:#0d3b4c;
+  --slate:#334e68;
+  --ok:#276749;
+  --warn:#9c6500;
+  --bad:#9b2c2c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 'Segoe UI',Arial,sans-serif}
+header{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;padding:24px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+header h1{margin:0 0 4px;font-size:21px;font-weight:600;letter-spacing:-0.01em}
+header p{margin:0;opacity:.88;font-size:13px}
+.userbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;background:rgba(255,255,255,.12);padding:7px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.2)}
+.logout{cursor:pointer;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:6px;padding:4px 10px;font-size:12px;transition:background .15s}
+.logout:hover{background:rgba(255,255,255,.18)}
+
+nav{display:flex;gap:8px;flex-wrap:wrap;padding:12px 32px;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.02)}
+nav button,.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:9px 15px;border-radius:7px;cursor:pointer;font-weight:500;font-size:13px;transition:all .15s ease}
+nav button:hover,.btn:hover{background:#f7f9fb;border-color:#c5d0d9}
+nav button.active,.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+nav button.active:hover,.btn.primary:hover{background:var(--accent2)}
+.btn.word{background:#1e4e79;color:#fff;border-color:#1e4e79}
+.btn.word:hover{background:#153858}
+.btn.sm{padding:5px 10px;font-size:12px}
+
+main{max-width:1380px;margin:22px auto;padding:0 24px}
+.view{display:none}.view.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.charts-grid{display:grid;grid-template-columns:1.45fr 1fr;gap:14px;margin-top:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(16,24,40,.03)}
+.card h2,.card h3{margin-top:0;color:var(--accent2);font-weight:600}
+.kpi-card{border-top:3px solid var(--accent)}
+.kpi-card.ok{border-top-color:var(--ok)}
+.kpi-card.warn{border-top-color:var(--warn)}
+.kpi{font-size:28px;font-weight:700;margin-top:6px;color:var(--ink)}
+.label{color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.sublabel{color:var(--muted);font-size:12px;margin-top:4px}
+.chart-box{position:relative;height:310px;width:100%}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0;align-items:center}
+.toolbar input,.toolbar select,.toolbar textarea,input,select,textarea{border:1px solid #cbd5df;border-radius:7px;padding:9px 11px;background:#fff;font-family:inherit;font-size:13px;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(23,107,135,.12)}
+
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle;text-align:left;font-size:13px}
+th{background:#f4f7f9;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:#475569;font-weight:600}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:#fafcfd}
+
+.progress{height:8px;background:#e4eaf0;border-radius:20px;overflow:hidden;min-width:95px}
+.progress>span{display:block;height:100%;background:var(--accent);border-radius:20px}
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:#edf2f7;color:#4a5568}
+.badge.ok{background:#e6f4ea;color:var(--ok)}
+.badge.warn{background:#fef5e7;color:var(--warn)}
+.badge.bad{background:#fde8e8;color:var(--bad)}
+
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.full{grid-column:1/-1}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+.small{font-size:12px;color:var(--muted)}
+.empty{padding:32px;text-align:center;color:var(--muted)}
+.notice{padding:11px 14px;background:#eef6f8;border-left:4px solid var(--accent);border-radius:6px;margin-bottom:14px;font-size:13px;color:#1e3a4c}
+.history-item{padding:12px 0;border-bottom:1px solid var(--line);line-height:1.5}
+.history-item:last-child{border-bottom:0}
+
+.login-overlay{position:fixed;inset:0;background:#eef2f6;display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:32px;width:min(440px,92vw);box-shadow:0 12px 32px rgba(15,35,52,.08)}
+.login-card h2{margin:0 0 6px;color:var(--accent2)}
+.login-card p{color:var(--muted);margin:0 0 18px;font-size:13px}
+.login-card label{display:block;margin:12px 0 5px;font-weight:600;font-size:13px}
+.login-card select,.login-card input{width:100%}
+
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:9998}
+.modal.show{display:flex}
+.modalbox{background:#fff;max-width:440px;width:100%;border-radius:12px;padding:24px;box-shadow:0 16px 36px rgba(0,0,0,.18)}
+.modalbox h3{margin:0 0 6px;color:var(--accent2)}
+.modalbox label{display:block;margin:12px 0 4px;font-weight:600;font-size:13px}
+.modalbox input{width:100%}
+
+.admin-box{background:#f8fafc;border:1px solid #d5dfe8;border-radius:8px;padding:16px;margin-bottom:16px}
+.admin-box summary{cursor:pointer;font-weight:600;color:var(--accent2);font-size:14px}
+.code-pill{font-family:Consolas,monospace;background:#eef2f6;padding:3px 7px;border-radius:4px;font-size:12px;color:#1e293b}
+
+@media(max-width:960px){
+  .grid{grid-template-columns:1fr 1fr}
+  .charts-grid{grid-template-columns:1fr}
+  .formgrid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+}
+@media(max-width:600px){
+  .grid{grid-template-columns:1fr}
+  main{padding:0 12px}
+  header,nav{padding:16px}
+}
+@media print{
+  nav,.toolbar,.admin-box,#loginOverlay,#pwdModal{display:none!important}
+  body{background:#fff}
+  .card{border:0;box-shadow:none;padding:0}
+}
+</style>
+</head>
+<body>
+
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <h2>Seguimiento Plan de Trabajo</h2>
+    <p>Fundación Luis von Ahn · Instituto Privado de Investigación sobre Cambio Climático</p>
+    <label for="loginUser">Usuario / Programa</label>
+    <select id="loginUser">
+      <option value="gpyc">GPyC · Administrador</option>
+      <option value="ceh">CeH</option>
+      <option value="dcyd">DCyD</option>
+      <option value="dg">DG</option>
+      <option value="do">DO</option>
+      <option value="cuencas">Especialista en Cuencas</option>
+      <option value="gdr">GdR</option>
+      <option value="conocimiento">Gestor del Conocimiento</option>
+      <option value="mic">MIC</option>
+      <option value="ssp">SSP</option>
+      <option value="todos">Todos</option>
+    </select>
+    <label for="loginPassword">Contraseña asignada</label>
+    <input id="loginPassword" type="password" placeholder="Ingrese su contraseña" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="actions"><button class="btn primary" style="width:100%" onclick="doLogin()">Ingresar al sistema</button></div>
+    <p class="small" style="margin-top:14px">Ingrese con la contraseña asignada a su programa. Una vez dentro podrá cambiarla desde la barra superior si lo desea.</p>
+  </div>
+</div>
+
+<!-- MODAL PARA CAMBIO DE CONTRASEÑA DEL USUARIO -->
+<div id="pwdModal" class="modal" onclick="if(event.target===this)closePasswordModal()">
+  <div class="modalbox">
+    <h3>Cambiar Contraseña de Acceso</h3>
+    <p class="small" id="pwdModalUserLabel"></p>
+    <label for="oldPwd">Contraseña actual</label>
+    <input id="oldPwd" type="password" placeholder="Ingrese su clave actual">
+    <label for="newPwd">Nueva contraseña (mínimo 6 caracteres)</label>
+    <input id="newPwd" type="password" placeholder="Escriba la nueva clave">
+    <label for="confirmPwd">Confirmar nueva contraseña</label>
+    <input id="confirmPwd" type="password" placeholder="Repita la nueva clave" onkeydown="if(event.key==='Enter')submitPasswordChange()">
+    <div class="actions">
+      <button class="btn" onclick="closePasswordModal()">Cancelar</button>
+      <button class="btn primary" onclick="submitPasswordChange()">Actualizar contraseña</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div>
+    <h1>Seguimiento del Plan de Trabajo · Fundación Luis von Ahn</h1>
+    <p>Instituto Privado de Investigación sobre Cambio Climático (ICC) · Monitoreo Ejecutivo</p>
+  </div>
+  <div id="userBar" class="userbar"></div>
+</header>
+
+<nav>
+  <button data-view="dashboard" class="active">Resumen Ejecutivo</button>
+  <button data-view="activities">Actividades</button>
+  <button data-view="entry">Registrar Avances</button>
+  <button data-view="reports">Reportes e Informe Word</button>
+  <button data-view="data">Sincronización y Datos</button>
+</nav>
+
+<main>
+  <!-- TABLERO EJECUTIVO -->
+  <section id="dashboard" class="view active">
+    <div class="grid">
+      <div class="card kpi-card">
+        <div class="label">Total Actividades</div>
+        <div id="kActivities" class="kpi">0</div>
+        <div class="sublabel">Alcance del perfil activo</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="label">Avance Promedio Global</div>
+        <div id="kProgress" class="kpi">0%</div>
+        <div class="sublabel">Acumulado histórico vigente</div>
+      </div>
+      <div class="card kpi-card ok">
+        <div class="label">Ejecución Alta (≥ 75%)</div>
+        <div id="kHigh" class="kpi">0</div>
+        <div class="sublabel">Actividades consolidadas</div>
+      </div>
+      <div class="card kpi-card warn">
+        <div class="label">Pendientes Reporte 2026</div>
+        <div id="kMissing" class="kpi">0</div>
+        <div class="sublabel">Sin registro mensual en 2026</div>
+      </div>
+    </div>
+
+    <div class="charts-grid">
+      <div class="card">
+        <h3>Avance Acumulado por Programa (%)</h3>
+        <div class="chart-box"><canvas id="programChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Distribución por Estado de Ejecución</h3>
+        <div class="chart-box"><canvas id="statusChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h3>Desempeño Detallado por Programa</h3>
+      <div id="programSummary"></div>
+    </div>
+  </section>
+
+  <!-- LISTADO DE ACTIVIDADES -->
+  <section id="activities" class="view">
+    <div class="toolbar">
+      <select id="programFilter"><option value="">Todos los programas</option></select>
+      <input id="searchFilter" style="min-width:280px" placeholder="Buscar por código o descripción...">
+    </div>
+    <div id="activityTable"></div>
+  </section>
+
+  <!-- REGISTRO DE AVANCES -->
+  <section id="entry" class="view">
+    <div class="card">
+      <h2>Registrar Avance Mensual</h2>
+      <div class="notice">Cada registro corresponde a un mes de reporte. El avance es acumulado y no puede ser inferior al último avance registrado en períodos previos.</div>
+      <div class="formgrid">
+        <div><label>Programa<br><select id="entryProgram" style="width:100%"></select></label></div>
+        <div><label>Actividad<br><select id="entryActivity" style="width:100%"></select></label></div>
+        <div><label>Año<br><input id="entryYear" type="number" value="2026" readonly style="width:100%"></label></div>
+        <div><label>Mes de reporte<br><select id="entryPeriod" style="width:100%">
+          <option value="Enero">Enero · 2026</option>
+          <option value="Febrero">Febrero · 2026</option>
+          <option value="Marzo">Marzo · 2026</option>
+          <option value="Abril">Abril · 2026</option>
+          <option value="Mayo">Mayo · 2026</option>
+          <option value="Junio">Junio · 2026</option>
+          <option value="Julio">Julio · 2026</option>
+          <option value="Agosto">Agosto · 2026</option>
+          <option value="Septiembre" selected>Septiembre · 2026</option>
+          <option value="Octubre">Octubre · 2026</option>
+          <option value="Noviembre">Noviembre · 2026</option>
+          <option value="Diciembre">Diciembre · 2026</option>
+        </select></label></div>
+        <div><label>Último avance registrado<br><input id="lastProgress" type="text" value="Sin registro previo" readonly style="width:100%;background:#f8fafc"></label></div>
+        <div><label>Nuevo avance acumulado (%)<br><input id="entryProgress" type="number" min="0" max="100" step="0.1" style="width:100%"></label></div>
+        <div><label>Estado<br><select id="entryStatus" style="width:100%">
+          <option>En curso</option>
+          <option>Completada</option>
+          <option>Con retraso</option>
+          <option>No iniciada</option>
+          <option>No aplica</option>
+        </select></label></div>
+        <div class="full"><label>Actividades desarrolladas<br><textarea id="entryNotes" rows="3" style="width:100%" placeholder="Acciones realizadas durante el mes reportado."></textarea></label></div>
+        <div class="full"><label>Resultados obtenidos (insumo clave para informe gerencial)<br><textarea id="entryResults" rows="3" style="width:100%" placeholder="Productos, entregables o hitos concretos logrados."></textarea></label></div>
+        <div class="full"><label>Dificultades<br><textarea id="entryDifficulties" rows="2" style="width:100%" placeholder="Indique las dificultades encontradas. Si no existen, indique 'Ninguna'."></textarea></label></div>
+        <div class="full"><label>Próximos pasos<br><textarea id="entryNext" rows="2" style="width:100%" placeholder="Acciones previstas para el siguiente período."></textarea></label></div>
+        <div class="full"><label>Observaciones<br><textarea id="entryObservations" rows="2" style="width:100%"></textarea></label></div>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="clearEntry()">Limpiar</button>
+        <button class="btn primary" onclick="saveUpdate()">Guardar y sincronizar reporte</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Historial de la actividad</h3>
+      <div id="activityHistory" class="small">Seleccione una actividad para consultar sus registros históricos.</div>
+    </div>
+  </section>
+
+  <!-- REPORTES E INFORME EJECUTIVO WORD -->
+  <section id="reports" class="view">
+    <details class="admin-box" open>
+      <summary>Contexto Base Gerencial (Configuración para Redacción Automática del Informe Word)</summary>
+      <p class="small" style="margin:8px 0 12px">El administrador define aquí el marco estratégico base. Al generar el documento Word, el sistema integra automáticamente esta narrativa con las métricas reales, resultados alcanzados, desglose por programa y retos del período seleccionado.</p>
+      <div class="formgrid">
+        <div class="full">
+          <label class="small"><b>Introducción y Enfoque Estratégico Base:</b></label>
+          <textarea id="adminIntroBase" rows="3" style="width:100%;margin-top:4px"></textarea>
+        </div>
+        <div class="full">
+          <label class="small"><b>Conclusión y Proyección Institucional Base:</b></label>
+          <textarea id="adminClosingBase" rows="2" style="width:100%;margin-top:4px"></textarea>
+        </div>
+      </div>
+      <div id="adminNarrativeActions" class="actions" style="margin-top:10px">
+        <button class="btn primary" onclick="saveAdminNarrative()">Guardar texto base gerencial</button>
+      </div>
+    </details>
+
+    <div class="toolbar">
+      <select id="reportProgram"><option value="">Todos los programas (Consolidado)</option></select>
+      <select id="reportYear"><option>2026</option><option>2025</option><option>2024</option></select>
+      <select id="reportPeriod">
+        <option value="">Anual</option>
+        <option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option>
+        <option>Mayo</option><option>Junio</option><option>Julio</option><option>Agosto</option>
+        <option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option>
+      </select>
+      <button class="btn primary" onclick="buildReport()">Vista previa en pantalla</button>
+      <button class="btn word" onclick="exportWordReport()">Descargar Informe Gerencial (Word)</button>
+      <button class="btn" onclick="exportCSV()">Exportar CSV (Excel)</button>
+      <button class="btn" onclick="window.print()">Imprimir / PDF</button>
+    </div>
+    <div id="reportOutput" class="card"><div class="empty">Seleccione los filtros y genere la vista previa o descargue el Informe Gerencial en Word.</div></div>
+  </section>
+
+  <!-- SINCRONIZACIÓN EXCEL, GESTIÓN DE CLAVES Y RESPALDO -->
+  <section id="data" class="view">
+    <div id="adminPasswordsCard" class="card" style="margin-bottom:14px;display:none">
+      <h2>Gestión de Claves de Acceso por Programa</h2>
+      <p class="small">Panel exclusivo para administración. Cada programa tiene una clave inicial asignada y puede cambiarla desde su sesión; desde aquí puede consultarlas o restablecerlas a su clave inicial.</p>
+      <div id="adminPasswordsTable"></div>
+    </div>
+
+    <div class="card">
+      <h2>Conexión con Base de Datos Excel (Power Automate / Cloud)</h2>
+      <p class="small">Pegue aquí la URL HTTP POST generada en Power Automate para que cada reporte guardado se envíe automáticamente a su archivo Excel en OneDrive/Escritorio.</p>
+      <div class="toolbar">
+        <input id="webhookInput" type="url" style="flex:1;min-width:300px" placeholder="https://prod-xx.westus.logic.azure.com:443/workflows/...">
+        <button class="btn primary" onclick="saveWebhook()">Guardar enlace de sincronización</button>
+      </div>
+      <div id="syncStatus" class="small" style="margin-bottom:16px"></div>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+      <h3>Respaldo Local</h3>
+      <p class="small">Descargue una copia completa de seguridad en formato JSON o restablezca los datos iniciales del plan.</p>
+      <div class="actions" style="justify-content:flex-start">
+        <button class="btn" onclick="downloadJSON()">Respaldar base de datos (JSON)</button>
+        <button class="btn" onclick="resetDemo()">Restablecer valores iniciales</button>
+      </div>
+      <pre id="dataPreview" style="white-space:pre-wrap;background:#f6f8f9;padding:12px;border-radius:8px;margin-top:14px;font-size:12px"></pre>
+    </div>
+  </section>
+</main>
+
+<script>
+const ROLE_MAP = {
+  gpyc:{key:"gpyc", name:"GPyC · Administrador", program:null, admin:true},
+  ceh:{key:"ceh", name:"CeH", program:"CeH", admin:false},
+  dcyd:{key:"dcyd", name:"DCyD", program:"DCyD", admin:false},
+  dg:{key:"dg", name:"DG", program:"DG", admin:false},
+  do:{key:"do", name:"DO", program:"DO", admin:false},
+  cuencas:{key:"cuencas", name:"Especialista en Cuencas", program:"Especialista en Cuencas", admin:false},
+  gdr:{key:"gdr", name:"GdR", program:"GdR", admin:false},
+  conocimiento:{key:"conocimiento", name:"Gestor del Conocimiento", program:"Gestor del Conocimiento", admin:false},
+  mic:{key:"mic", name:"MIC", program:"MIC", admin:false},
+  ssp:{key:"ssp", name:"SSP", program:"SSP", admin:false},
+  todos:{key:"todos", name:"Todos", program:"Todos", admin:false}
+};
+
+const DEFAULT_PASSWORDS = {
+  gpyc: "AdminICC2026",
+  ceh: "CeH2026",
+  dcyd: "DCyD2026",
+  dg: "DG2026",
+  do: "DO2026",
+  cuencas: "Cuencas2026",
+  gdr: "GdR2026",
+  conocimiento: "Conocimiento2026",
+  mic: "MIC2026",
+  ssp: "SSP2026",
+  todos: "Todos2026"
+};
+
+const DEFAULT_NARRATIVE = {
+  intro: "En el marco de la alianza estratégica entre la Fundación Luis von Ahn (FLvA) y el Instituto Privado de Investigación sobre Cambio Climático (ICC), se presenta el informe ejecutivo de seguimiento al Plan de Trabajo. Las acciones reportadas consolidan esfuerzos técnicos, científicos y comunitarios orientados a fortalecer la resiliencia climática, la gestión integrada de cuencas, la conservación de ecosistemas marino-costeros y la reducción del riesgo de desastres en la vertiente del Pacífico de Guatemala.",
+  closing: "La ejecución acumulada refleja una articulación efectiva entre investigación aplicada, monitoreo hidrometeorológico y gobernanza territorial. Para el siguiente período se priorizará el cierre técnico de los productos en curso, el seguimiento continuo a las mesas técnicas y comunidades, y la sistematización de resultados para la toma de decisiones."
+};
+
+let currentUser = JSON.parse(sessionStorage.getItem("icc_lva_user") || "null");
+let progChartInstance = null;
+let statusChartInstance = null;
+
+const SEED = {
+  "planYear": 2026,
+  "periods": ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"],
+  "programs": ["CeH", "DCyD", "DG", "DO", "Especialista en Cuencas", "GdR", "Gestor del Conocimiento", "MIC", "SSP", "Todos"],
+  "passwords": {...DEFAULT_PASSWORDS},
+  "adminNarrative": DEFAULT_NARRATIVE,
+  "webhookUrl": "",
+  "activities": [
+    {"id": "1.1.1", "activity": "1.1.1 Instalación de nueva estación meteorológica parte alta cuenca río Guacalate", "program": "CeH", "start": 2022, "end": 2023, "baseline": "No hay estación", "expected": "Estación en funcionamiento en parte alta de la cuenca y datos de 5 años", "prior_progress": 25.0, "prior_notes": "En gestiones para su instalación"},
+    {"id": "1.1.2", "activity": "1.1.2 Elaborar y distribución de boletines meteorológicos para las mesas agroclimáticas y pequeños productores", "program": "CeH", "start": 2023, "end": 2026, "baseline": "No se generan boletines para mesas y pequeños productores", "expected": "5 mesas agroclimáticas departamentales reciben información periodicamente\nComunidades y grupos de productores reciben información relevante para sus cultivos", "prior_progress": 80.0, "prior_notes": "Participación en reuniones de MTA (Sololá, Escuintla, Suchitepequez-Retalhuleu, Santa Rosa y Chimaltenango).\nGeneración de boletines agroclimáticos\nPequeños agricultores: Chimaltenango y Santa Rosa (2 cada uno)"},
+    {"id": "1.1.3", "activity": "1.1.3 Mantenimiento de estaciones y análisis de información meteorológica", "program": "CeH", "start": 2022, "end": 2026, "baseline": "34 estaciones con mantenimiento preventivo y correctivo regular", "expected": "35 estaciones con mantenimiento reforzado", "prior_progress": 80.0, "prior_notes": "Fortalecimiento para el mantenimiento:\nTécnico encargado de mantenimiento\nVehículo \nViáticos de campo\nAmpliación de fondos para adquiri repuestos de sensores."},
+    {"id": "1.1.4", "activity": "1.1.4 Investigación sobre agua subterranea asociada a manglares (Manchon Guamuchal, Sipacate-Naranjo y Hawai-Monterrico)", "program": "CeH", "start": 2023, "end": 2026, "baseline": "3 estudios para Sipacate-Naranjo y 1 preliminar para Manchón", "expected": "4 nuevos estudios cubriendo Manchon y Monterrico-Hawai", "prior_progress": 60.0, "prior_notes": "1 estudio en área de Manchon Guamuchal - Vitor Cantarela. (2022)\n1 estudio Recarga Achiguate (espacio)- César Espinosa (2023)\n1 estudio Recarga Achiguate (tiempo) - Emma Simpson (2024)"},
+    {"id": "1.2.1", "activity": "1.2.1 Actualización del estudio de zonas inundables parte baja cuenca río Achiguate", "program": "GdR", "start": 2023, "end": 2024, "baseline": "Existe 1 estudio elaborado por SEGEPLAN-JICA del 2010", "expected": "Estudio actualizado utilizando nuevo modelo de elevación digital y datos meteorológicos más recientes", "prior_progress": 100.0, "prior_notes": "Actualización de mapa, estudio hidrológico e hidráulico, en proceso de elaboración de documento técnico"},
+    {"id": "1.2.2", "activity": "1.2.2 Escenarios de cambio climático para la cuenca río Achiguate", "program": "GdR", "start": 2024, "end": 2025, "baseline": "Escenario 2010 para inundaciones\nEstudios anteriores de inundaciones sin escenarios futuros", "expected": "Estudios de inundaciones y sequías según escenarios de cambio climático", "prior_progress": 100.0, "prior_notes": "Estudio realizado; documento  en desarrollo (80%, mapas y análisis de sequía)"},
+    {"id": "1.3.1", "activity": "1.3.1 Investigación sobre medios de vida y/u opciones de adaptación en zona marino costera", "program": "SSP", "start": 2023, "end": 2026, "baseline": "Estudios realizados para Sipacate-Naranjo 2015", "expected": "Estudios para al menos 3 áreas más en la zona marino costera", "prior_progress": 0.0, "prior_notes": ""},
+    {"id": "1.4.1", "activity": "1.4.1 Publicación de artículos científicos asociados a cambio climático, biodiversidad, gestión de riesgo", "program": "Gestor del Conocimiento", "start": 2023, "end": 2026, "baseline": "2019-Investigación Melany Ramírez Dinámica de la cobertura del Manglar, Sipacate-Naranjo.", "expected": "Al menos 4 artículos científicos entregados a revistas", "prior_progress": 75.0, "prior_notes": "Año 2023 (Publicados)\n1. Índice de calidad de agua\n2. Agua subterránea\n3. Agua y energía (ODS-Agroindustria)\nNo hubo publicaciones\nAño 2024 (en proceso)\n1. Peces en aguas continentales\n3. Huertos familiares \n4. Evaluación de la resiliencia comunitaria.\nAño 2025\n1. Diversidad de aves en diferentes tipo de vegetación\n2. Capítulo de las aguas. Libro Historia Natural del Reino de Guatemala."},
+    {"id": "2.1.1", "activity": "2.1.1 Divulgar y capacitar sobre riesgos volcánicos e hidrometeorológicos a actores relevantes en la cuenca Achiguate (munis, comunidades, etc.)", "program": "GdR", "start": 2023, "end": 2024, "baseline": "Estudios existentes solo los conoce INSIVUMEH y CONRED", "expected": "Estudios son conocidos por municipalidades y Codedes de Sacatepequez y Escuintla, y comunidades de la cuenca Achiguate", "prior_progress": 100.0, "prior_notes": "2024. Inicio del proyecto Ixchel, algunas acciones incluyen: Capacitaciones con técnicos municipale, \nComisión de riesgos para río Achiguate.\nModelaciones:\nActualización del modelo de inundaciones ríos Guacalate y Achiguate (con apoyo de ingenios Santa Ana, San Diego, Magdalena, y en coordinación con Municipalidad Masagua)"},
+    {"id": "2.1.2", "activity": "2.1.2 Conformación y acreditación de COLRED en cuenca Achiguate", "program": "GdR", "start": 2023, "end": 2025, "baseline": "11 COLRED en parte baja de la cuenca", "expected": "Al menos 20 COLRED apoyadas", "prior_progress": 100.0, "prior_notes": "Año 2023\n6 (apoyo WWF e IMSA)\nAño 2024\n3 (apoyo CRS)\nAño 2025\n20 (también con apoyo de Ixchel)"},
+    {"id": "2.1.3", "activity": "2.1.3 Envío de información, alertas y apoyo a COLRED cuenca Achiguate", "program": "GdR", "start": 2024, "end": 2026, "baseline": "11 COLRED en parte baja de la cuenca", "expected": "Al menos 20 COLRED apoyadas", "prior_progress": 66.7, "prior_notes": "Año 2023\n6 (con apoyo WWF e IMSA)\nAño 2024\n3 (con apoyo CRS)\nAño 2025\n20 (también con apoyo de Ixchel)"},
+    {"id": "2.2.1", "activity": "2.2.1 Monitoreo de calidad de agua en ríos relacionados a manglares principales (Ocosito, Acomé, Paso Hondo, Los Esclavos y Paz)", "program": "MIC", "start": 2023, "end": 2026, "baseline": "2 puntos de muestreo por cuenca, 2 veces al año en cada cuenca\nDatos de 6 años", "expected": "Al menos 5 puntos de muestreo, 4 veces al año en cada cuenca", "prior_progress": 75.0, "prior_notes": "Continua 2 veces al año, no se monitorea río Paz"},
+    {"id": "2.2.2", "activity": "2.2.2 Seguimiento a lineamientos de biodiversidad de la producción de azúcar", "program": "SSP", "start": 2023, "end": 2026, "baseline": "Lineamientos aprobados y 2 planes de acción de Ingenios", "expected": "Apoyo a la elaboración de al menos 4 planes de acción y apoyo a su implementación", "prior_progress": 75.0, "prior_notes": "3 planes de accion (Pantaleon: en fase de implementación, Magdalena: socializado y aprobado, y Palo Gordo: documento elaborado)"},
+    {"id": "2.2.3", "activity": "2.2.3 Formulación de proyectos de carbono azul", "program": "SSP", "start": 2024, "end": 2026, "baseline": "1 estudio de carbono azul en Sipacate-Naranjo", "expected": "Al menos 1 estudio en otras 2 áreas de mangle, y propuesta de proyecto de créditos de carbono en 2 áreas", "prior_progress": 0.0, "prior_notes": ""},
+    {"id": "2.2.4", "activity": "2.2.4 Fomento a ciencia ciudadana relacionada a biodiversidad ", "program": "SSP", "start": 2024, "end": 2026, "baseline": "", "expected": "Información generada con participación de la población en al menos 3 áreas de manglares", "prior_progress": 66.7, "prior_notes": "\nSimposio de manglares 2025\nCurso de cambio climático para empresas 2025\nReportar los eventos donde ha participado Fernando"},
+    {"id": "2.2.5", "activity": "2.2.5 Concientización del valor de la biodiversidad con diferentes actores", "program": "SSP", "start": 2023, "end": 2026, "baseline": "", "expected": "Campaña de concientización en poblados y escuelas del área de influencia de manglares", "prior_progress": 75.0, "prior_notes": "Publicaciones-notas de biodiversidad realizadas por Comunicación ICC:\n8 publicaciones, campaña \"biodiversidad en la costa sur\"\n1 publicación del día de la diversidad biológica\n"},
+    {"id": "2.2.6", "activity": "2.2.6 Apoyo a la conservación de bosques parte alta de cuencas (Ocosito, Acomé, Achiguate, Los Esclavos)", "program": "MIC", "start": 2023, "end": 2026, "baseline": "No se han tenido acciones de apoyo a la conservación de bosques en estas cuencas", "expected": "Acciones de conservación de bosques implementadas en cuenca río Achiguate", "prior_progress": 75.0, "prior_notes": "Trabajo en restauración desarrollado en Sacatepequez y Chimaltenango. Producción de 200 mil plantas (2024) y 90,000 (2025)\nProyecto IUFRO-NOVO, complementando acciones de restauración. \n900 mil arbolitos producidos con fondos de LvA\nEvaluación forestal 2025-2026"},
+    {"id": "2.3.1", "activity": "2.3.1 Implementación de parcelas demostrativas de adaptación.", "program": "DCyD", "start": 2023, "end": 2026, "baseline": "Parcelas demostrativas en parte baja cuenca Acomé", "expected": "Fortalecimiento de parcelas demostrativas en Acomé e implementación en Los Esclavos y Ocosito", "prior_progress": 0.0, "prior_notes": "Gabriel, ha trabajado en pisicultura, también fondos de ingenio Magdalena. LvA ha pagado salario de Gabriel"},
+    {"id": "2.4.1", "activity": "2.4.1 Apoyo a la elaboración y/o implementación de planes de manejo de cuenca (Ocosito, Acomé, Achiguate, Los Esclavos)", "program": "Especialista en Cuencas", "start": 2023, "end": 2026, "baseline": "Planes de manejo de cuenca elaborados Ocosito y Achiguate,  solicitud de elaboración de Los Esclavos e insumos para plan de manejo cuenca Acomé", "expected": "Planes elaborados para Los Esclavos y Acomé, e implementación en proceso en las 4 cuencas", "prior_progress": 75.0, "prior_notes": "Planes de manejo en 2 cuencas (Ocosito y Achiguate), 1 en proceso (Los Esclavos, y uno sin (Acomé)\n4 mesas técnicas funcionando\nSeguimiento a comisiones forestales\nSeguimiento a comisiones de riesgos de desastres.\nEl proceso ha sido lento por parte del MARN. Para el diagnóstico se hicieron talleres con mujeres (grupos xincas). El proceso es financiado por FLvA"},
+    {"id": "2.4.2", "activity": "2.4.2 Apoyo al sistema de monitoreo de ríos", "program": "MIC", "start": 2023, "end": 2026, "baseline": "Sistema funcionando en cuencas Ocosito, Acomé, Achiguate y Los Esclavos)", "expected": "Sistema continúa funcionando en las 4 cuencas.\nInstalación de estación hidrométrica en parte alta de cuenca Achiguate.", "prior_progress": 75.0, "prior_notes": "Compra de molinetes y MFPro.\nSistema funcionando en esas 4 cuencas\nReparaciones y compra de técnología proviene de FLvA (Q100 mil aprox)."},
+    {"id": "2.4.3", "activity": "2.4.3 Apoyo a conformación y seguimiento de mesas técnicas de los ríos relacionados a manglares (Ocosito, Acomé, Achiguate y Los Esclavos)", "program": "Especialista en Cuencas", "start": 2023, "end": 2026, "baseline": "Mesas técnicas conformadas en Ocosito y Los Esclavos", "expected": "Conformación de mesas técnicas en Acomé y Achiguate.\nSeguimiento a las 4 cuencas en los 4 años.", "prior_progress": 75.0, "prior_notes": "4 mesas técnicas conformadas y funcionando.\nSeguimiento a comisiones forestales\nSeguimiento a comisiones de riesgo de desastres.\nConsultar a Giovanni sobre estadísticas.\nSalario de Giovanni para el seguimiento.\nFLvA apoyo para reuniones de las mesas y comisiones.\nDocumento sobre cronología de las mesas técnicas elaborado para el MARN"},
+    {"id": "2.4.4", "activity": "2.4.4 Organización y desarrollo del 2do. Congreso Nacional del Agua", "program": "DG", "start": 2022, "end": 2023, "baseline": "Existe un comité organizador y se desarrolla proceso de organización", "expected": "2do. Congreso Nacional del Agua desarrollado y definición de fecha para el siguiente.", "prior_progress": 100.0, "prior_notes": "2do. Congreso Nacional de Recursos Hídricos realizado el 7 y 8 de agosto 2023.\n3er Congreso Nacional de Recursos Hídricos realizado el 1 y 2 de septiembre de 2025"},
+    {"id": "3.1.1", "activity": "3.1.1 Establecimiento y apoyo a viveros forestales en la cuenca Achiguate y otras asociadas a manglares", "program": "MIC", "start": 2022, "end": 2026, "baseline": "Un vivero regional en Parramos y viveros en las cuencas Ocosito, Acomé y Los Esclavos.", "expected": "Al menos 2 viveros más en la parte alta cuenca Guacalate y mayor producción en los viveros de cuencas Ocosito, Acomé y Los Esclavos", "prior_progress": 80.0, "prior_notes": "Vivero regional Parramos (200 mil plantas en 2024)\nFortalecimiento oficina, vehículo, viveros Chimaltenango y Sacatepequez.\nViveros comunitarios, municipales. \nInvernadero de Muni Antigua, en Florencia"},
+    {"id": "3.2.1", "activity": "3.2.1 Estimación de carbono fijado por acciones de restauración", "program": "SSP", "start": 2024, "end": 2026, "baseline": "Estimaciones de las acciones de restauración del ICC al 2020", "expected": "Carbono estimado en restauración con apoyo de Fundación LvA", "prior_progress": 75.0, "prior_notes": "Informes 2023, 2024 y 2025 (en proceso de elaboración).\nEvaluación forestal contribuye a esta actividad.\nCalculadora de carbono, financiado por FLvA"},
+    {"id": "3.2.2", "activity": "3.2.2 Evaluación de la restauración forestal impulsada y apoyada por el ICC", "program": "MIC", "start": 2025, "end": 2026, "baseline": "Evaluación de restauración forestal ICC al 2020", "expected": "Evaluación de restauración forestal ICC al 2026", "prior_progress": 50.0, "prior_notes": "En proceso de elaboración de la evaluación finaliza en 2026"},
+    {"id": "5.1.1", "activity": "5.1.1 Diplomados en adaptación comunitaria al cambio climático en zonas marino-costeras", "program": "DCyD", "start": 2023, "end": 2026, "baseline": "Diplomado impartido en Sipacate en 2022 y Diplomados en parte baja Ocosito en años anteriores", "expected": "Diplomados impartidos en Ocosito, Sipacate y Monterrico-Hawai", "prior_progress": 50.0, "prior_notes": "Diplomado de adaptación comunitaria impartido en Sipacate, Escuintla.\nMencionar todos los diplomados que se han impartido."},
+    {"id": "5.1.2", "activity": "5.1.2 Diplomado en gestión integrada de cuencas, dirigido a nuevos funcionarios de Gobierno", "program": "DCyD", "start": 2024, "end": 2026, "baseline": "", "expected": "Diplomados impartidos a delegados del MARN, MAGA y otros funcionarios de Retalhuleu, Suchitepequez y Santa Rosa", "prior_progress": 66.7, "prior_notes": "\n2024: 8 diplomados cambio climático en Retalhuleu, Quetzaltenango y Suchitepequez.\n2025: 5 diplomados sobre cambio climático  en Suchitepequez, Escuintla, Jutiapa y Chimaltenango."},
+    {"id": "5.1.3", "activity": "5.1.3 Eventos de concientización y educación sobre cambio climático, biodiversidad, gestión de riesgos, gestión del agua, etc.", "program": "Todos", "start": 2023, "end": 2026, "baseline": "ICC ha organizado eventos sobre cambio climático, gestión de riesgo y algunos en gestión del agua en 12 años", "expected": "Congreso de biodiversidad para la región del Pacífico.\nEventos sobre cambio climático, gestión de riesgos, gestión del agua, etc. realizados.", "prior_progress": 75.0, "prior_notes": "I Seminario de Riego Sostenible y II Simposio de Recursos Hídricos\nCurso de Conservación de Biodiversidad (Caña, Banano) dirigido a empresas.\nCurso de cambio climático a empresas\nSalario de Biologo (Fernando Rivera) puesto creado gracias a la FLvA\nEventos donde Fernando ha participado"},
+    {"id": "5.2.1", "activity": "5.2.1 Programa de capacitación según brechas identificadas para puestos del ICC.", "program": "DO", "start": 2023, "end": 2026, "baseline": "Se están definiendo los perfiles para los nuevos puestos y puestos modificados ", "expected": "Programa de capacitación desarrollado", "prior_progress": 75.0, "prior_notes": "Perfiles y descriptores de puesto desarrollados\nPlan de bienestar que incluye un programa de estrategias a la carta desarrollado para el equipo ICC se implementa desde el 2024."}
+  ],
+  "updates": [
+    {"id": "1.1.1-2025", "activityId": "1.1.1", "program": "CeH", "year": 2025, "period": "Anual", "progress": 25.0, "status": "En curso", "notes": "En gestiones para su instalación", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "1.1.2-2025", "activityId": "1.1.2", "program": "CeH", "year": 2025, "period": "Anual", "progress": 80.0, "status": "En curso", "notes": "Participación en reuniones de MTA (Sololá, Escuintla, Suchitepequez-Retalhuleu, Santa Rosa y Chimaltenango).\nGeneración de boletines agroclimáticos\nPequeños agricultores: Chimaltenango y Santa Rosa (2 cada uno)", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "1.1.3-2025", "activityId": "1.1.3", "program": "CeH", "year": 2025, "period": "Anual", "progress": 80.0, "status": "En curso", "notes": "Fortalecimiento para el mantenimiento:\nTécnico encargado de mantenimiento\nVehículo \nViáticos de campo\nAmpliación de fondos para adquiri repuestos de sensores.", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "1.1.4-2025", "activityId": "1.1.4", "program": "CeH", "year": 2025, "period": "Anual", "progress": 60.0, "status": "En curso", "notes": "1 estudio en área de Manchon Guamuchal - Vitor Cantarela. (2022)\n1 estudio Recarga Achiguate (espacio)- César Espinosa (2023)\n1 estudio Recarga Achiguate (tiempo) - Emma Simpson (2024)", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "1.2.1-2025", "activityId": "1.2.1", "program": "GdR", "year": 2025, "period": "Anual", "progress": 100.0, "status": "Completada", "notes": "Actualización de mapa, estudio hidrológico e hidráulico, en proceso de elaboración de documento técnico", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "1.2.2-2025", "activityId": "1.2.2", "program": "GdR", "year": 2025, "period": "Anual", "progress": 100.0, "status": "Completada", "notes": "Estudio realizado; documento  en desarrollo (80%, mapas y análisis de sequía)", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "1.3.1-2025", "activityId": "1.3.1", "program": "SSP", "year": 2025, "period": "Anual", "progress": 0.0, "status": "No completada", "notes": "", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "1.4.1-2025", "activityId": "1.4.1", "program": "Gestor del Conocimiento", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "Año 2023 (Publicados)\n1. Índice de calidad de agua\n2. Agua subterránea\n3. Agua y energía (ODS-Agroindustria)\nNo hubo publicaciones\nAño 2024 (en proceso)\n1. Peces en aguas continentales\n3. Huertos familiares \n4. Evaluación de la resiliencia comunitaria.\nAño 2025\n1. Diversidad de aves en diferentes tipo de vegetación\n2. Capítulo de las aguas. Libro Historia Natural del Reino de Guatemala.", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.1.1-2025", "activityId": "2.1.1", "program": "GdR", "year": 2025, "period": "Anual", "progress": 100.0, "status": "Completada", "notes": "2024. Inicio del proyecto Ixchel, algunas acciones incluyen: Capacitaciones con técnicos municipale, \nComisión de riesgos para río Achiguate.\nModelaciones:\nActualización del modelo de inundaciones ríos Guacalate y Achiguate (con apoyo de ingenios Santa Ana, San Diego, Magdalena, y en coordinación con Municipalidad Masagua)", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.1.2-2025", "activityId": "2.1.2", "program": "GdR", "year": 2025, "period": "Anual", "progress": 100.0, "status": "Completada", "notes": "Año 2023\n6 (apoyo WWF e IMSA)\nAño 2024\n3 (apoyo CRS)\nAño 2025\n20 (también con apoyo de Ixchel)", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.1.3-2025", "activityId": "2.1.3", "program": "GdR", "year": 2025, "period": "Anual", "progress": 66.66666666666666, "status": "En curso", "notes": "Año 2023\n6 (con apoyo WWF e IMSA)\nAño 2024\n3 (con apoyo CRS)\nAño 2025\n20 (también con apoyo de Ixchel)", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.2.1-2025", "activityId": "2.2.1", "program": "MIC", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "Continua 2 veces al año, no se monitorea río Paz", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.2.2-2025", "activityId": "2.2.2", "program": "SSP", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "3 planes de accion (Pantaleon: en fase de implementación, Magdalena: socializado y aprobado, y Palo Gordo: documento elaborado)", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.2.3-2025", "activityId": "2.2.3", "program": "SSP", "year": 2025, "period": "Anual", "progress": 0.0, "status": "No completada", "notes": "", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.2.4-2025", "activityId": "2.2.4", "program": "SSP", "year": 2025, "period": "Anual", "progress": 66.66666666666666, "status": "En curso", "notes": "\nSimposio de manglares 2025\nCurso de cambio climático para empresas 2025\nReportar los eventos donde ha participado Fernando", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.2.5-2025", "activityId": "2.2.5", "program": "SSP", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "Publicaciones-notas de biodiversidad realizadas por Comunicación ICC:\n8 publicaciones, campaña \"biodiversidad en la costa sur\"\n1 publicación del día de la diversidad biológica\n", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.2.6-2025", "activityId": "2.2.6", "program": "MIC", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "Trabajo en restauración desarrollado en Sacatepequez y Chimaltenango. Producción de 200 mil plantas (2024) y 90,000 (2025)\nProyecto IUFRO-NOVO, complementando acciones de restauración. \n900 mil arbolitos producidos con fondos de LvA\nEvaluación forestal 2025-2026", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.3.1-2025", "activityId": "2.3.1", "program": "DCyD", "year": 2025, "period": "Anual", "progress": 0.0, "status": "No completada", "notes": "Gabriel, ha trabajado en pisicultura, también fondos de ingenio Magdalena. LvA ha pagado salario de Gabriel", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.4.1-2025", "activityId": "2.4.1", "program": "Especialista en Cuencas", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "Planes de manejo en 2 cuencas (Ocosito y Achiguate), 1 en proceso (Los Esclavos, y uno sin (Acomé)\n4 mesas técnicas funcionando\nSeguimiento a comisiones forestales\nSeguimiento a comisiones de riesgos de desastres.\nEl proceso ha sido lento por parte del MARN. Para el diagnóstico se hicieron talleres con mujeres (grupos xincas). El proceso es financiado por FLvA", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.4.2-2025", "activityId": "2.4.2", "program": "MIC", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "Compra de molinetes y MFPro.\nSistema funcionando en esas 4 cuencas\nReparaciones y compra de técnología proviene de FLvA (Q100 mil aprox).", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.4.3-2025", "activityId": "2.4.3", "program": "Especialista en Cuencas", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "4 mesas técnicas conformadas y funcionando.\nSeguimiento a comisiones forestales\nSeguimiento a comisiones de riesgo de desastres.\nConsultar a Giovanni sobre estadísticas.\nSalario de Giovanni para el seguimiento.\nFLvA apoyo para reuniones de las mesas y comisiones.\nDocumento sobre cronología de las mesas técnicas elaborado para el MARN", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "2.4.4-2025", "activityId": "2.4.4", "program": "DG", "year": 2025, "period": "Anual", "progress": 100.0, "status": "Completada", "notes": "2do. Congreso Nacional de Recursos Hídricos realizado el 7 y 8 de agosto 2023.\n3er Congreso Nacional de Recursos Hídricos realizado el 1 y 2 de septiembre de 2025", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "3.1.1-2025", "activityId": "3.1.1", "program": "MIC", "year": 2025, "period": "Anual", "progress": 80.0, "status": "En curso", "notes": "Vivero regional Parramos (200 mil plantas en 2024)\nFortalecimiento oficina, vehículo, viveros Chimaltenango y Sacatepequez.\nViveros comunitarios, municipales. \nInvernadero de Muni Antigua, en Florencia", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "3.2.1-2025", "activityId": "3.2.1", "program": "SSP", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "Informes 2023, 2024 y 2025 (en proceso de elaboración).\nEvaluación forestal contribuye a esta actividad.\nCalculadora de carbono, financiado por FLvA", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "3.2.2-2025", "activityId": "3.2.2", "program": "MIC", "year": 2025, "period": "Anual", "progress": 50.0, "status": "En curso", "notes": "En proceso de elaboración de la evaluación finaliza en 2026", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "5.1.1-2025", "activityId": "5.1.1", "program": "DCyD", "year": 2025, "period": "Anual", "progress": 50.0, "status": "En curso", "notes": "Diplomado de adaptación comunitaria impartido en Sipacate, Escuintla.\nMencionar todos los diplomados que se han impartido.", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "5.1.2-2025", "activityId": "5.1.2", "program": "DCyD", "year": 2025, "period": "Anual", "progress": 66.66666666666666, "status": "En curso", "notes": "\n2024: 8 diplomados cambio climático en Retalhuleu, Quetzaltenango y Suchitepequez.\n2025: 5 diplomados sobre cambio climático  en Suchitepequez, Escuintla, Jutiapa y Chimaltenango.", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "5.1.3-2025", "activityId": "5.1.3", "program": "Todos", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "I Seminario de Riego Sostenible y II Simposio de Recursos Hídricos\nCurso de Conservación de Biodiversidad (Caña, Banano) dirigido a empresas.\nCurso de cambio climático a empresas\nSalario de Biologo (Fernando Rivera) puesto creado gracias a la FLvA\nEventos donde Fernando ha participado", "next": "", "savedAt": "2025-12-31T23:59:59"},
+    {"id": "5.2.1-2025", "activityId": "5.2.1", "program": "DO", "year": 2025, "period": "Anual", "progress": 75.0, "status": "En curso", "notes": "Perfiles y descriptores de puesto desarrollados\nPlan de bienestar que incluye un programa de estrategias a la carta desarrollado para el equipo ICC se implementa desde el 2024.", "next": "", "savedAt": "2025-12-31T23:59:59"}
+  ],
+  "scheduled": {
+    "1.1.1": {"2024": false, "2025": false}, "1.1.2": {"2024": true, "2025": true},
+    "1.1.3": {"2024": true, "2025": true}, "1.1.4": {"2024": true, "2025": false},
+    "1.2.1": {"2024": true, "2025": false}, "1.2.2": {"2024": true, "2025": true},
+    "1.3.1": {"2024": false, "2025": false}, "1.4.1": {"2024": true, "2025": true},
+    "2.1.1": {"2024": true, "2025": true}, "2.1.2": {"2024": true, "2025": true},
+    "2.1.3": {"2024": true, "2025": true}, "2.2.1": {"2024": true, "2025": true},
+    "2.2.2": {"2024": true, "2025": true}, "2.2.3": {"2024": false, "2025": false},
+    "2.2.4": {"2024": true, "2025": true}, "2.2.5": {"2024": true, "2025": true},
+    "2.2.6": {"2024": true, "2025": true}, "2.3.1": {"2024": false, "2025": false},
+    "2.4.1": {"2024": true, "2025": true}, "2.4.2": {"2024": true, "2025": true},
+    "2.4.3": {"2024": true, "2025": true}, "2.4.4": {"2024": false, "2025": true},
+    "3.1.1": {"2024": true, "2025": true}, "3.2.1": {"2024": true, "2025": true},
+    "3.2.2": {"2024": false, "2025": true}, "5.1.1": {"2024": true, "2025": false},
+    "5.1.2": {"2024": true, "2025": true}, "5.1.3": {"2024": true, "2025": true},
+    "5.2.1": {"2024": true, "2025": true}
+  }
+};
+
+const KEY = "icc_lva_tracking_v2";
+let db = JSON.parse(localStorage.getItem(KEY) || "null") || JSON.parse(JSON.stringify(SEED));
+if(!db.adminNarrative) db.adminNarrative = {...DEFAULT_NARRATIVE};
+db.passwords = {...DEFAULT_PASSWORDS, ...(db.passwords || {})};
+
+function saveDB(){
+  localStorage.setItem(KEY, JSON.stringify(db));
+  renderAll();
+}
+
+function getUserPassword(key){
+  return (db.passwords && db.passwords[key]) || DEFAULT_PASSWORDS[key];
+}
+
+function doLogin(){
+  const key=document.getElementById("loginUser").value;
+  const password=document.getElementById("loginPassword").value;
+  if(!password){alert("Ingrese su contraseña.");return;}
+  if(password !== getUserPassword(key)){
+    alert("Contraseña incorrecta para el programa seleccionado.");
+    document.getElementById("loginPassword").value="";
+    return;
+  }
+  currentUser=ROLE_MAP[key];
+  sessionStorage.setItem("icc_lva_user",JSON.stringify(currentUser));
+  document.getElementById("loginPassword").value="";
+  document.getElementById("loginOverlay").style.display="none";
+  applyPermissions();
+}
+
+function logout(){
+  sessionStorage.removeItem("icc_lva_user");
+  currentUser=null;
+  document.getElementById("loginOverlay").style.display="flex";
+}
+
+function openPasswordModal(){
+  if(!currentUser) return;
+  document.getElementById("pwdModalUserLabel").textContent = `Usuario activo: ${currentUser.name}`;
+  document.getElementById("oldPwd").value = "";
+  document.getElementById("newPwd").value = "";
+  document.getElementById("confirmPwd").value = "";
+  document.getElementById("pwdModal").classList.add("show");
+  setTimeout(()=>document.getElementById("oldPwd").focus(), 50);
+}
+
+function closePasswordModal(){
+  document.getElementById("pwdModal").classList.remove("show");
+}
+
+function submitPasswordChange(){
+  if(!currentUser) return;
+  const oldP = document.getElementById("oldPwd").value;
+  const newP = document.getElementById("newPwd").value.trim();
+  const confP = document.getElementById("confirmPwd").value.trim();
+  const userKey = currentUser.key || Object.keys(ROLE_MAP).find(k => ROLE_MAP[k].name === currentUser.name);
+
+  if(oldP !== getUserPassword(userKey)){
+    alert("La contraseña actual ingresada no es correcta.");
+    return;
+  }
+  if(newP.length < 6){
+    alert("La nueva contraseña debe tener al menos 6 caracteres.");
+    return;
+  }
+  if(newP !== confP){
+    alert("La confirmación no coincide con la nueva contraseña.");
+    return;
+  }
+
+  db.passwords[userKey] = newP;
+  saveDB();
+  closePasswordModal();
+  alert("Su contraseña ha sido actualizada exitosamente.");
+}
+
+function adminSetPassword(userKey){
+  if(!currentUser?.admin) return;
+  const role = ROLE_MAP[userKey];
+  const current = getUserPassword(userKey);
+  const next = prompt(`Ingrese la nueva contraseña para ${role.name}:`, current);
+  if(next === null) return;
+  if(next.trim().length < 6){
+    alert("La contraseña debe tener al menos 6 caracteres.");
+    return;
+  }
+  db.passwords[userKey] = next.trim();
+  saveDB();
+  alert(`Contraseña actualizada para ${role.name}.`);
+}
+
+function adminResetPassword(userKey){
+  if(!currentUser?.admin) return;
+  const role = ROLE_MAP[userKey];
+  if(confirm(`¿Restablecer la contraseña de ${role.name} a su clave asignada inicial (${DEFAULT_PASSWORDS[userKey]})?`)){
+    db.passwords[userKey] = DEFAULT_PASSWORDS[userKey];
+    saveDB();
+  }
+}
+
+function renderAdminPasswords(){
+  const card = document.getElementById("adminPasswordsCard");
+  const container = document.getElementById("adminPasswordsTable");
+  if(!card || !container) return;
+  if(!currentUser?.admin){
+    card.style.display = "none";
+    return;
+  }
+  card.style.display = "block";
+  const rows = Object.values(ROLE_MAP).map(r => {
+    const activePwd = getUserPassword(r.key);
+    const defaultPwd = DEFAULT_PASSWORDS[r.key];
+    const isDefault = activePwd === defaultPwd;
+    return `<tr>
+      <td><b>${escapeHtml(r.name)}</b></td>
+      <td><span class="code-pill">${escapeHtml(activePwd)}</span></td>
+      <td>${isDefault ? '<span class="badge">Asignada inicial</span>' : '<span class="badge ok">Personalizada por usuario</span>'}</td>
+      <td>
+        <button class="btn sm" onclick="adminSetPassword('${r.key}')">Cambiar clave</button>
+        ${!isDefault ? `<button class="btn sm" onclick="adminResetPassword('${r.key}')">Restablecer (${escapeHtml(defaultPwd)})</button>` : ''}
+      </td>
+    </tr>`;
+  }).join("");
+  container.innerHTML = `<table><thead><tr><th>Usuario / Programa</th><th>Clave Activa</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function visibleActivities(){
+  if(!currentUser || currentUser.admin) return db.activities;
+  return db.activities.filter(a=>a.program===currentUser.program);
+}
+
+function applyPermissions(){
+  if(!currentUser)return;
+  document.getElementById("loginOverlay").style.display="none";
+  document.getElementById("userBar").innerHTML =
+    `Perfil: <b>${escapeHtml(currentUser.name)}</b> ` +
+    `<button class="logout" onclick="openPasswordModal()">Cambiar clave</button> ` +
+    `<button class="logout" onclick="logout()">Cerrar sesión</button>`;
+
+  const psel=document.getElementById("programFilter");
+  const rsel=document.getElementById("reportProgram");
+  if(!currentUser.admin){
+    [psel,rsel].forEach(el=>{ if(el){el.value=currentUser.program; el.disabled=true;} });
+    const ep=document.getElementById("entryProgram");
+    if(ep){ep.value=currentUser.program; ep.disabled=true; updateEntryActivities();}
+  } else {
+    [psel,rsel].forEach(el=>{if(el)el.disabled=false;});
+    const ep=document.getElementById("entryProgram"); if(ep)ep.disabled=false;
+  }
+
+  const introEl=document.getElementById("adminIntroBase");
+  const closeEl=document.getElementById("adminClosingBase");
+  const actionsEl=document.getElementById("adminNarrativeActions");
+  if(introEl && closeEl){
+    introEl.readOnly = !currentUser.admin;
+    closeEl.readOnly = !currentUser.admin;
+    if(actionsEl) actionsEl.style.display = currentUser.admin ? "flex" : "none";
+  }
+
+  renderAll();
+}
+
+function programs(){
+  return [...new Set(db.activities.map(a=>a.program).filter(Boolean))].sort();
+}
+function latestAny(aid){
+  let arr=db.updates.filter(u=>u.activityId===aid).sort((a,b)=>String(a.savedAt).localeCompare(String(b.savedAt)));
+  return arr.at(-1);
+}
+function escapeHtml(s){
+  return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+}
+function pct(v){
+  return Math.max(0,Math.min(100,Number(v)||0));
+}
+
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showView(b.dataset.view));
+function showView(id){
+  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===id));
+  renderAll();
+}
+
+function fillSelect(id, vals, first){
+  const el=document.getElementById(id); if(!el)return;
+  const current=el.value; el.innerHTML=first?`<option value="">${first}</option>`:"";
+  vals.forEach(v=>el.insertAdjacentHTML("beforeend",`<option>${escapeHtml(v)}</option>`));
+  if([...el.options].some(o=>o.value===current))el.value=current;
+}
+
+function renderAll(){
+  fillSelect("programFilter",programs(),"Todos los programas");
+  fillSelect("reportProgram",programs(),"Todos los programas (Consolidado)");
+  fillSelect("entryProgram",programs(),"Seleccione programa");
+  updateEntryActivities();
+  renderDashboard();
+  renderActivities();
+  loadAdminNarrativeUI();
+  renderAdminPasswords();
+  updatePreview();
+}
+
+document.getElementById("programFilter").onchange=renderActivities;
+document.getElementById("searchFilter").oninput=renderActivities;
+document.getElementById("entryProgram").onchange=updateEntryActivities;
+document.getElementById("entryActivity").onchange=loadActivityForEntry;
+document.getElementById("entryPeriod").onchange=loadActivityForEntry;
+
+function updateEntryActivities(){
+  const p=document.getElementById("entryProgram")?.value||"", el=document.getElementById("entryActivity");
+  if(!el)return;
+  const current=el.value;
+  el.innerHTML='<option value="">Seleccione actividad</option>';
+  visibleActivities().filter(a=>!p||a.program===p).forEach(a=>el.insertAdjacentHTML("beforeend",`<option value="${escapeHtml(a.id)}">${escapeHtml(a.activity)}</option>`));
+  if([...el.options].some(o=>o.value===current))el.value=current;
+  loadActivityForEntry();
+}
+
+const MONTHS=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+function monthOrder(month){return MONTHS.indexOf(month)+1;}
+
+function normalizeLegacyRecords(){
+  let changed=false;
+  const legacy={"C1 (ene-abr)":"Abril","C2 (may-ago)":"Agosto","C3 (sep-dic)":"Diciembre"};
+  db.updates=(db.updates||[]).map(u=>{
+    const copy={...u};
+    if(Number(copy.year)===2026 && legacy[copy.period]){copy.period=legacy[copy.period]; changed=true;}
+    if("evidence" in copy){delete copy.evidence; changed=true;}
+    return copy;
+  });
+  if(changed)localStorage.setItem(KEY,JSON.stringify(db));
+}
+normalizeLegacyRecords();
+
+function activityUpdates(aid){
+  return db.updates.filter(u=>u.activityId===aid).sort((a,b)=>{
+    const ya=Number(a.year)||0, yb=Number(b.year)||0;
+    if(ya!==yb)return ya-yb;
+    const pa=a.period==="Anual"?13:monthOrder(a.period), pb=b.period==="Anual"?13:monthOrder(b.period);
+    if(pa!==pb)return pa-pb;
+    return String(a.savedAt).localeCompare(String(b.savedAt));
+  });
+}
+
+function recordForPeriod(aid,year,period){
+  const arr=db.updates.filter(u=>u.activityId===aid && String(u.year)===String(year));
+  if(period && period!=="Anual") return arr.filter(u=>u.period===period).sort((a,b)=>String(a.savedAt).localeCompare(String(b.savedAt))).at(-1);
+  return arr.filter(u=>u.period==="Anual").sort((a,b)=>String(a.savedAt).localeCompare(String(b.savedAt))).at(-1)
+    || arr.filter(u=>u.period!=="Anual").sort((a,b)=>monthOrder(a.period)-monthOrder(b.period)||String(a.savedAt).localeCompare(String(b.savedAt))).at(-1);
+}
+
+function loadActivityForEntry(){
+  const aid=document.getElementById("entryActivity")?.value||"", rows=aid?activityUpdates(aid):[], last=rows.at(-1);
+  document.getElementById("lastProgress").value=last?`${Number(last.progress).toFixed(1)}% (${last.year} · ${last.period})`:"Sin registro previo";
+  document.getElementById("entryProgress").min=0;
+  renderActivityHistory(aid);
+  if(!aid)return;
+  const period=document.getElementById("entryPeriod")?.value||"Septiembre";
+  const existing=db.updates.find(u=>u.activityId===aid && Number(u.year)===2026 && u.period===period);
+  if(existing){
+    document.getElementById("entryProgress").value=existing.progress;
+    document.getElementById("entryStatus").value=existing.status||"En curso";
+    document.getElementById("entryNotes").value=existing.notes||"";
+    document.getElementById("entryResults").value=existing.results||"";
+    document.getElementById("entryDifficulties").value=existing.difficulties||"";
+    document.getElementById("entryNext").value=existing.next||"";
+    document.getElementById("entryObservations").value=existing.observations||"";
+  }
+}
+
+function renderActivityHistory(aid){
+  const box=document.getElementById("activityHistory"); if(!box)return;
+  if(!aid){box.textContent="Seleccione una actividad para consultar sus registros históricos.";return;}
+  const rows=activityUpdates(aid);
+  if(!rows.length){box.innerHTML='<div class="empty">No hay registros históricos para esta actividad.</div>';return;}
+  box.innerHTML=rows.map(u=>`<div class="history-item"><b>${escapeHtml(u.year)} · ${escapeHtml(u.period)}</b> — <b>${Number(u.progress).toFixed(1)}%</b> · <span class="badge ${u.status==='Completada'?'ok':'warn'}">${escapeHtml(u.status||"")}</span><br>${u.notes?`<b>Actividades:</b> ${escapeHtml(u.notes)}`:""}${u.results?`<br><b>Resultados:</b> ${escapeHtml(u.results)}`:""}${u.difficulties?`<br><b>Dificultades:</b> ${escapeHtml(u.difficulties)}`:""}${u.next?`<br><b>Próximos pasos:</b> ${escapeHtml(u.next)}`:""}${u.observations?`<br><b>Observaciones:</b> ${escapeHtml(u.observations)}`:""}</div>`).join("");
+}
+
+async function syncToCloudExcel(payload){
+  const url = (db.webhookUrl || "").trim();
+  if(!url) return false;
+  try{
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(payload)
+    });
+    return res.ok;
+  }catch(e){
+    console.warn("Error de sincronización webhook:", e);
+    return false;
+  }
+}
+
+async function saveUpdate(){
+  const aid=document.getElementById("entryActivity").value;
+  const year=Number(document.getElementById("entryYear").value)||2026;
+  const period=document.getElementById("entryPeriod").value;
+  const progress=Number(document.getElementById("entryProgress").value);
+  if(!aid){alert("Seleccione una actividad.");return;}
+  if(!Number.isFinite(progress)||progress<0||progress>100){alert("El avance debe estar entre 0 y 100%.");return;}
+
+  const activity=visibleActivities().find(a=>a.id===aid);
+  if(!activity){alert("La actividad seleccionada no está disponible para su usuario.");return;}
+
+  const samePeriod=db.updates.find(u=>u.activityId===aid && String(u.year)===String(year) && u.period===period);
+  const previous=db.updates.filter(u=>u.activityId===aid && String(u.year)===String(year) && u.period!==period && u.period!=="Anual" && monthOrder(u.period)<monthOrder(period))
+    .sort((a,b)=>monthOrder(a.period)-monthOrder(b.period)||String(a.savedAt).localeCompare(String(b.savedAt))).at(-1);
+  const next=db.updates.filter(u=>u.activityId===aid && String(u.year)===String(year) && u.period!==period && u.period!=="Anual" && monthOrder(u.period)>monthOrder(period))
+    .sort((a,b)=>monthOrder(a.period)-monthOrder(b.period)||String(a.savedAt).localeCompare(String(b.savedAt)))[0];
+
+  if(previous && progress<Number(previous.progress)){
+    alert(`El avance de ${period} (${progress}%) no puede ser menor al avance del período anterior (${Number(previous.progress).toFixed(1)}%).`);return;
+  }
+  if(next && progress>Number(next.progress)){
+    alert(`El avance de ${period} (${progress}%) no puede ser mayor al avance ya registrado en ${next.period} (${Number(next.progress).toFixed(1)}%).`);return;
+  }
+
+  const recordId = samePeriod ? samePeriod.id : crypto.randomUUID();
+  const payload={
+    id: recordId,
+    activityId:aid,
+    activityTitle:activity.activity,
+    program:activity.program,
+    year,
+    period,
+    progress,
+    status:document.getElementById("entryStatus").value,
+    notes:document.getElementById("entryNotes").value.trim(),
+    results:document.getElementById("entryResults").value.trim(),
+    difficulties:document.getElementById("entryDifficulties").value.trim(),
+    next:document.getElementById("entryNext").value.trim(),
+    observations:document.getElementById("entryObservations").value.trim(),
+    reportedBy: currentUser?.name || "Usuario",
+    savedAt:new Date().toISOString()
+  };
+
+  if(samePeriod){
+    Object.assign(samePeriod,payload);
+  }else{
+    db.updates.push(payload);
+  }
+  saveDB();
+
+  const synced = await syncToCloudExcel(payload);
+  const msgSync = db.webhookUrl ? (synced ? "\n✓ Sincronizado con la base de datos Excel en la nube." : "\n⚠ Guardado localmente (verifique conexión con Power Automate).") : "";
+  alert(`Reporte de ${period} ${year} guardado correctamente.${msgSync}`);
+  clearEntry();
+}
+
+function clearEntry(){
+  ["entryActivity","entryNotes","entryResults","entryDifficulties","entryNext","entryObservations"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("entryProgress").value="";
+  document.getElementById("entryProgress").min=0;
+  document.getElementById("entryStatus").value="En curso";
+  document.getElementById("lastProgress").value="Sin registro previo";
+  renderActivityHistory("");
+}
+
+function editActivity(id){
+  const a=visibleActivities().find(x=>x.id===id); if(!a)return;
+  document.getElementById("entryProgram").value=a.program;
+  updateEntryActivities();
+  document.getElementById("entryActivity").value=id;
+  loadActivityForEntry();
+  const period=document.getElementById("entryPeriod").value||"Septiembre";
+  const u=recordForPeriod(id,2026,period)||latestAny(id);
+  document.getElementById("entryProgress").value=u?.progress ?? a.prior_progress ?? 0;
+  document.getElementById("entryStatus").value=u?.status ?? "En curso";
+  document.getElementById("entryNotes").value=u?.notes ?? a.prior_notes ?? "";
+  document.getElementById("entryResults").value=u?.results ?? "";
+  document.getElementById("entryDifficulties").value=u?.difficulties ?? "";
+  document.getElementById("entryNext").value=u?.next ?? "";
+  document.getElementById("entryObservations").value=u?.observations ?? "";
+  showView("entry");
+}
+
+function renderDashboard(){
+  const acts=visibleActivities();
+  const vals=acts.map(a=>(latestAny(a.id)?.progress ?? a.prior_progress ?? 0));
+  document.getElementById("kActivities").textContent=acts.length;
+  document.getElementById("kProgress").textContent=(vals.reduce((a,b)=>a+Number(b),0)/(vals.length||1)).toFixed(1)+"%";
+  document.getElementById("kHigh").textContent=vals.filter(v=>v>=75).length;
+  document.getElementById("kMissing").textContent=acts.filter(a=>!db.updates.some(u=>u.activityId===a.id && Number(u.year)===2026 && u.period!=="Anual")).length;
+
+  const activePrograms = currentUser && !currentUser.admin ? [currentUser.program] : programs();
+  const progLabels = [];
+  const progAverages = [];
+
+  const rows=activePrograms.map(p=>{
+    const aa=acts.filter(a=>a.program===p);
+    const vv=aa.map(a=>latestAny(a.id)?.progress ?? a.prior_progress ?? 0);
+    const av=vv.reduce((x,y)=>x+Number(y),0)/(vv.length||1);
+    const comp=aa.filter(a=>(latestAny(a.id)?.status==="Completada" || (latestAny(a.id)?.progress ?? a.prior_progress)>=100)).length;
+    progLabels.push(p);
+    progAverages.push(Number(av.toFixed(1)));
+    return `<tr>
+      <td><b>${escapeHtml(p)}</b></td>
+      <td>${aa.length}</td>
+      <td>${comp} / ${aa.length}</td>
+      <td><div class="progress"><span style="width:${pct(av)}%"></span></div></td>
+      <td><b>${av.toFixed(1)}%</b></td>
+    </tr>`;
+  }).join("");
+
+  document.getElementById("programSummary").innerHTML=`<table><thead><tr><th>Programa</th><th>Actividades</th><th>Completadas</th><th>Barra de progreso</th><th>Avance Promedio</th></tr></thead><tbody>${rows}</tbody></table>`;
+
+  const statusCounts = {"Completada":0, "En curso":0, "Con retraso":0, "No iniciada / Sin reporte":0};
+  acts.forEach(a=>{
+    const st = latestAny(a.id)?.status || "Sin reporte";
+    if(st==="Completada") statusCounts["Completada"]++;
+    else if(st==="En curso") statusCounts["En curso"]++;
+    else if(st==="Con retraso") statusCounts["Con retraso"]++;
+    else statusCounts["No iniciada / Sin reporte"]++;
+  });
+
+  renderExecutiveCharts(progLabels, progAverages, statusCounts);
+}
+
+function renderExecutiveCharts(labels, averages, statusCounts){
+  if(typeof Chart === "undefined") return;
+
+  const ctx1 = document.getElementById("programChart");
+  if(ctx1){
+    if(progChartInstance) progChartInstance.destroy();
+    progChartInstance = new Chart(ctx1, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Avance promedio (%)",
+          data: averages,
+          backgroundColor: "#176b87",
+          hoverBackgroundColor: "#0d3b4c",
+          borderRadius: 5,
+          barPercentage: 0.65
+        }]
+      },
+      options: {
+        indexAxis: "y",
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {display: false},
+          tooltip: {callbacks: {label: ctx => ` ${ctx.raw}% acumulado`}}
+        },
+        scales: {
+          x: {min: 0, max: 100, grid: {color: "#edf2f7"}, ticks: {callback: v => v + "%", font: {size: 11}}},
+          y: {grid: {display: false}, ticks: {font: {size: 12, weight: "600"}, color: "#1e293b"}}
+        }
+      }
+    });
+  }
+
+  const ctx2 = document.getElementById("statusChart");
+  if(ctx2){
+    if(statusChartInstance) statusChartInstance.destroy();
+    statusChartInstance = new Chart(ctx2, {
+      type: "doughnut",
+      data: {
+        labels: Object.keys(statusCounts),
+        datasets: [{
+          data: Object.values(statusCounts),
+          backgroundColor: ["#276749", "#176b87", "#b7791f", "#94a3b8"],
+          borderWidth: 2,
+          borderColor: "#ffffff"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "64%",
+        plugins: {
+          legend: {position: "bottom", labels: {boxWidth: 12, padding: 14, font: {size: 12}}}
+        }
+      }
+    });
+  }
+}
+
+function renderActivities(){
+  const p=currentUser && !currentUser.admin ? currentUser.program : (document.getElementById("programFilter")?.value||""), q=(document.getElementById("searchFilter")?.value||"").toLowerCase();
+  const acts=visibleActivities().filter(a=>(!p||a.program===p)&&(!q||a.activity.toLowerCase().includes(q)));
+  const rows=acts.map(a=>{
+    const u=latestAny(a.id), pr=u?.progress ?? a.prior_progress ?? 0;
+    const badgeClass = u?.status==="Completada" ? "ok" : (u?.status==="Con retraso" ? "bad" : "warn");
+    return `<tr><td><b>${escapeHtml(a.activity)}</b><br><span class="small">${escapeHtml(a.baseline)}</span></td><td>${escapeHtml(a.program)}</td><td>${a.start}-${a.end}</td><td><b>${pr.toFixed(1)}%</b></td><td><div class="progress"><span style="width:${pct(pr)}%"></span></div></td><td>${u?`<span class="badge ${badgeClass}">${escapeHtml(u.status)}</span>`:'<span class="badge">Sin actualización</span>'}</td><td><button class="btn" onclick="editActivity('${escapeHtml(a.id)}')">Registrar</button></td></tr>`;
+  }).join("");
+  document.getElementById("activityTable").innerHTML=`<table><thead><tr><th>Actividad</th><th>Programa</th><th>Vigencia</th><th>Avance</th><th>Progreso</th><th>Estado</th><th>Acción</th></tr></thead><tbody>${rows||'<tr><td colspan="7" class="empty">Sin resultados.</td></tr>'}</tbody></table>`;
+}
+
+function loadAdminNarrativeUI(){
+  const introEl = document.getElementById("adminIntroBase");
+  const closeEl = document.getElementById("adminClosingBase");
+  if(introEl) introEl.value = db.adminNarrative?.intro || DEFAULT_NARRATIVE.intro;
+  if(closeEl) closeEl.value = db.adminNarrative?.closing || DEFAULT_NARRATIVE.closing;
+}
+
+function saveAdminNarrative(){
+  if(!currentUser?.admin){alert("Solo el administrador puede modificar el texto base.");return;}
+  db.adminNarrative = {
+    intro: document.getElementById("adminIntroBase").value.trim() || DEFAULT_NARRATIVE.intro,
+    closing: document.getElementById("adminClosingBase").value.trim() || DEFAULT_NARRATIVE.closing
+  };
+  saveDB();
+  alert("Texto base gerencial guardado. Se aplicará automáticamente en los próximos informes Word.");
+}
+
+function getReportDataset(){
+  const p=document.getElementById("reportProgram").value;
+  const y=Number(document.getElementById("reportYear").value);
+  const per=document.getElementById("reportPeriod").value;
+  const acts=visibleActivities().filter(a=>!p||a.program===p);
+  const rows=acts.map(a=>{
+    const u=recordForPeriod(a.id,y,per);
+    const scheduled=y<=2025 ? !!db.scheduled?.[a.id]?.[y] : (y>=a.start && y<=a.end);
+    const pr=u ? Number(u.progress)||0 : 0;
+    const status=u?.status || (scheduled ? "Sin reporte" : "Fuera de período");
+    return {a,u,pr,status,scheduled};
+  });
+  const reportRows=rows.filter(r=>r.scheduled || r.u);
+  const reported=reportRows.filter(r=>r.u).length;
+  const completed=reportRows.filter(r=>r.u && r.status==="Completada").length;
+  const avg=reported ? reportRows.filter(r=>r.u).reduce((s,r)=>s+r.pr,0)/reported : 0;
+  return {p, y, per, reportRows, reported, completed, avg};
+}
+
+function buildReport(){
+  const {p, y, per, reportRows, reported, completed, avg} = getReportDataset();
+  const title=per?`Reporte ${per} · ${y}`:`Reporte Anual · ${y}`;
+  document.getElementById("reportOutput").innerHTML=`
+    <h2>${title}</h2>
+    <p><b>Alcance:</b> ${escapeHtml(p||"Consolidado Institucional (Todos los programas)")} · <b>Actividades del período:</b> ${reportRows.length} · <b>Reportadas:</b> ${reported} · <b>Completadas:</b> ${completed}</p>
+    <p><b>Avance promedio de actividades reportadas:</b> ${avg.toFixed(1)}%</p>
+    <table><thead><tr><th>Actividad</th><th>Programa</th><th>Programada ${y}</th><th>Avance</th><th>Estado</th><th>Acciones y Resultados Clave</th></tr></thead><tbody>
+    ${reportRows.map(r=>`<tr><td>${escapeHtml(r.a.activity)}</td><td>${escapeHtml(r.a.program)}</td><td>${r.scheduled?'Sí':'—'}</td><td>${r.u?r.pr.toFixed(1)+'%':'—'}</td><td>${escapeHtml(r.status)}</td><td>${escapeHtml([r.u?.results,r.u?.notes].filter(Boolean).join(" — ")||"Sin detalle registrado")}</td></tr>`).join("")}
+    </tbody></table>`;
+}
+
+function exportWordReport(){
+  const {p, y, per, reportRows, reported, completed, avg} = getReportDataset();
+  const scopeLabel = p ? `Programa ${p}` : "Consolidado General (Todos los Programas)";
+  const periodLabel = per ? `${per} de ${y}` : `Consolidado Anual ${y}`;
+  const today = new Date().toLocaleDateString("es-GT", {year:"numeric", month:"long", day:"numeric"});
+
+  const introText = db.adminNarrative?.intro || DEFAULT_NARRATIVE.intro;
+  const closingText = db.adminNarrative?.closing || DEFAULT_NARRATIVE.closing;
+
+  const highlights = reportRows
+    .filter(r => r.u && (r.u.results || r.u.notes) && r.pr > 0)
+    .sort((a,b) => b.pr - a.pr)
+    .slice(0, 12)
+    .map(r => {
+      const detail = r.u.results ? r.u.results : r.u.notes;
+      return `<li><b>[${escapeHtml(r.a.program)}] ${escapeHtml(r.a.activity)} (${r.pr.toFixed(1)}%):</b> ${escapeHtml(detail).replace(/\n/g, "; ")}</li>`;
+    }).join("");
+
+  const involvedPrograms = [...new Set(reportRows.map(r => r.a.program))].sort();
+  const programRowsHtml = involvedPrograms.map(prog => {
+    const items = reportRows.filter(r => r.a.program === prog);
+    const repItems = items.filter(r => r.u);
+    const progAvg = repItems.length ? repItems.reduce((s,r)=>s+r.pr,0)/repItems.length : 0;
+    const progComp = repItems.filter(r => r.status === "Completada").length;
+    return `<tr>
+      <td>${escapeHtml(prog)}</td>
+      <td style="text-align:center">${items.length}</td>
+      <td style="text-align:center">${repItems.length}</td>
+      <td style="text-align:center">${progComp}</td>
+      <td style="text-align:right"><b>${progAvg.toFixed(1)}%</b></td>
+    </tr>`;
+  }).join("");
+
+  const challenges = reportRows
+    .filter(r => r.u && (r.u.difficulties || r.u.next))
+    .map(r => {
+      const parts = [];
+      if(r.u.difficulties && r.u.difficulties.toLowerCase() !== "ninguna") parts.push(`<i>Dificultad:</i> ${escapeHtml(r.u.difficulties)}`);
+      if(r.u.next) parts.push(`<i>Próximos pasos:</i> ${escapeHtml(r.u.next)}`);
+      if(!parts.length) return "";
+      return `<li><b>${escapeHtml(r.a.id)} (${escapeHtml(r.a.program)}):</b> ${parts.join(" | ")}</li>`;
+    }).filter(Boolean).join("");
+
+  const wordHtml = `
+  <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset='utf-8'><title>Informe Gerencial ICC - FLvA</title>
+  <style>
+    body { font-family: 'Calibri', 'Arial', sans-serif; font-size: 11pt; color: #1f2933; line-height: 1.45; }
+    .header-banner { background-color: #0d3b4c; color: #ffffff; padding: 18px 22px; border-bottom: 4px solid #176b87; }
+    .header-banner h1 { margin: 0; font-size: 16pt; font-weight: bold; }
+    .header-banner p { margin: 4px 0 0; font-size: 10pt; color: #d9e6ec; }
+    .meta-table { width: 100%; border-collapse: collapse; margin: 14px 0 18px; background-color: #f4f7f9; }
+    .meta-table td { padding: 8px 12px; border: 1px solid #d5dfe8; font-size: 10pt; }
+    h2 { color: #0d3b4c; font-size: 13pt; border-bottom: 1.5px solid #176b87; padding-bottom: 4px; margin-top: 20px; }
+    .kpi-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    .kpi-table td { width: 25%; border: 1px solid #cbd5df; padding: 10px; text-align: center; background-color: #fafcfd; }
+    .kpi-num { font-size: 16pt; font-weight: bold; color: #176b87; display: block; }
+    .kpi-lbl { font-size: 8.5pt; text-transform: uppercase; color: #52606d; }
+    .data-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 9.5pt; }
+    .data-table th { background-color: #176b87; color: #ffffff; padding: 8px; border: 1px solid #176b87; text-align: left; }
+    .data-table td { padding: 7px 8px; border: 1px solid #cbd5df; vertical-align: top; }
+    ul { margin: 8px 0 14px 18px; padding: 0; }
+    li { margin-bottom: 6px; text-align: justify; }
+    p { text-align: justify; }
+    .footer-note { margin-top: 28px; padding-top: 10px; border-top: 1px solid #cbd5df; font-size: 9pt; color: #616e7c; }
+  </style>
+  </head>
+  <body>
+    <div class="header-banner">
+      <h1>INFORME GERENCIAL DE SEGUIMIENTO Y RESULTADOS</h1>
+      <p>Plan de Trabajo Fundación Luis von Ahn (FLvA) · Instituto Privado de Investigación sobre Cambio Climático (ICC)</p>
+    </div>
+
+    <table class="meta-table">
+      <tr>
+        <td><b>Alcance del Informe:</b> ${escapeHtml(scopeLabel)}</td>
+        <td><b>Período Evaluado:</b> ${escapeHtml(periodLabel)}</td>
+      </tr>
+      <tr>
+        <td><b>Fecha de Emisión:</b> ${escapeHtml(today)}</td>
+        <td><b>Generado por:</b> ${escapeHtml(currentUser?.name || "Administración ICC")}</td>
+      </tr>
+    </table>
+
+    <h2>1. Contexto y Síntesis Ejecutiva</h2>
+    <p>${escapeHtml(introText)}</p>
+    <p>Durante el período correspondiente a <b>${escapeHtml(periodLabel)}</b>, bajo el alcance de <b>${escapeHtml(scopeLabel)}</b>, se dio seguimiento a <b>${reportRows.length} actividades</b> programadas, registrándose reportes efectivos en <b>${reported} de ellas</b> con un <b>avance acumulado promedio de ${avg.toFixed(1)}%</b> y un total de <b>${completed} actividades completadas al 100%</b>.</p>
+
+    <table class="kpi-table">
+      <tr>
+        <td><span class="kpi-num">${reportRows.length}</span><span class="kpi-lbl">Actividades Evaluadas</span></td>
+        <td><span class="kpi-num">${reported}</span><span class="kpi-lbl">Con Reporte Activo</span></td>
+        <td><span class="kpi-num">${avg.toFixed(1)}%</span><span class="kpi-lbl">Avance Promedio</span></td>
+        <td><span class="kpi-num">${completed}</span><span class="kpi-lbl">Completadas</span></td>
+      </tr>
+    </table>
+
+    <h2>2. Principales Resultados Alcanzados</h2>
+    ${highlights ? `<ul>${highlights}</ul>` : `<p>No se registraron resultados detallados con avance superior al 0% para los filtros seleccionados.</p>`}
+
+    <h2>3. Desempeño por Programa Técnico</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Programa</th>
+          <th style="text-align:center">Actividades</th>
+          <th style="text-align:center">Reportadas</th>
+          <th style="text-align:center">Completadas</th>
+          <th style="text-align:right">Avance Promedio</th>
+        </tr>
+      </thead>
+      <tbody>${programRowsHtml}</tbody>
+    </table>
+
+    <h2>4. Retos Operativos y Próximos Pasos</h2>
+    ${challenges ? `<ul>${challenges}</ul>` : `<p>Las actividades reportadas continúan su ejecución conforme al cronograma establecido sin bloqueos críticos reportados en el período.</p>`}
+
+    <h2>5. Conclusión Gerencial</h2>
+    <p>${escapeHtml(closingText)}</p>
+
+    <div class="footer-note">
+      Documento generado automáticamente desde el Sistema de Seguimiento Plan de Trabajo FLvA · Instituto Privado de Investigación sobre Cambio Climático (ICC).
+    </div>
+  </body>
+  </html>`;
+
+  const blob = new Blob(["\ufeff", wordHtml], {type: "application/msword;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const safeProg = (p || "Consolidado").replace(/[^a-zA-Z0-9_-]/g, "_");
+  a.href = url;
+  a.download = `Informe_Gerencial_FLvA_ICC_${safeProg}_${y}_${per || "Anual"}.doc`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportCSV(){
+  const p=document.getElementById("reportProgram").value;
+  const y=Number(document.getElementById("reportYear").value);
+  const per=document.getElementById("reportPeriod").value;
+  const acts=visibleActivities().filter(a=>!p||a.program===p);
+  const lines=[["Actividad","Programa","Año","Periodo","Programada","Avance acumulado %","Estado","Actividades desarrolladas","Resultados obtenidos","Dificultades","Próximos pasos","Observaciones"].join(",")];
+  acts.forEach(a=>{
+    const scheduled=y<=2025?!!db.scheduled?.[a.id]?.[y]:(y>=a.start&&y<=a.end);
+    if(!scheduled)return;
+    const u=recordForPeriod(a.id,y,per);
+    lines.push([a.activity,a.program,y,per||"Anual",scheduled?"Sí":"No",u?.progress??0,u?.status??"Sin reporte",u?.notes??"",u?.results??"",u?.difficulties??"",u?.next??"",u?.observations??""].map(x=>`"${String(x).replaceAll('"','""')}"`).join(","));
+  });
+  const blob=new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),el=document.createElement("a");el.href=url;el.download=`Reporte_LvA_ICC_${y}_${per||"anual"}.csv`;el.click();URL.revokeObjectURL(url);
+}
+
+function saveWebhook(){
+  if(!currentUser?.admin){alert("Solo el administrador puede configurar el enlace de sincronización.");return;}
+  db.webhookUrl = document.getElementById("webhookInput").value.trim();
+  saveDB();
+  alert("Enlace de sincronización guardado correctamente.");
+}
+
+function downloadJSON(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),el=document.createElement("a");el.href=url;el.download="respaldo_seguimiento_LvA_ICC.json";el.click();URL.revokeObjectURL(url);
+}
+
+function resetDemo(){
+  if(confirm("Esto eliminará las actualizaciones locales registradas en este navegador y restaurará los datos base (incluyendo claves iniciales). ¿Continuar?")){
+    db=JSON.parse(JSON.stringify(SEED));
+    saveDB();
+  }
+}
+
+function updatePreview(){
+  const whInput = document.getElementById("webhookInput");
+  if(whInput && document.activeElement !== whInput) whInput.value = db.webhookUrl || "";
+  const st = document.getElementById("syncStatus");
+  if(st) st.innerHTML = db.webhookUrl ? `<span class="badge ok">Sincronización activa con Power Automate / Excel</span>` : `<span class="badge warn">Modo local activo (pegue una URL de Power Automate para enviar datos a Excel)</span>`;
+  document.getElementById("dataPreview").textContent=JSON.stringify({
+    totalActividades: db.activities.length,
+    totalRegistros: db.updates.length,
+    sincronizacionActiva: Boolean(db.webhookUrl),
+    programas: programs()
+  },null,2);
+}
+
+renderAll();
+if(currentUser){applyPermissions();}else{document.getElementById('loginOverlay').style.display='flex';}
+</script>
+</body>
+</html>
