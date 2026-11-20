@@ -312,7 +312,7 @@ tr:hover td{background:#fafcfd}
     <div id="reportOutput" class="card"><div class="empty">Seleccione los filtros y genere la vista previa o descargue el Informe Gerencial en Word.</div></div>
   </section>
 
-  <!-- SINCRONIZACIÓN EXCEL, GESTIÓN DE CLAVES Y RESPALDO -->
+  <!-- SINCRONIZACIÓN GOOGLE SHEETS / EXCEL, GESTIÓN DE CLAVES Y RESPALDO -->
   <section id="data" class="view">
     <div id="adminPasswordsCard" class="card" style="margin-bottom:14px;display:none">
       <h2>Gestión de Claves de Acceso por Programa</h2>
@@ -321,10 +321,10 @@ tr:hover td{background:#fafcfd}
     </div>
 
     <div class="card">
-      <h2>Conexión con Base de Datos Excel (Power Automate / Cloud)</h2>
-      <p class="small">Pegue aquí la URL HTTP POST generada en Power Automate para que cada reporte guardado se envíe automáticamente a su archivo Excel en OneDrive/Escritorio.</p>
+      <h2>Conexión con Base de Datos Google Sheets / Excel (Apps Script)</h2>
+      <p class="small">Pegue aquí la URL de aplicación web generada en Google Apps Script (terminada en <code>/exec</code>) para que cada reporte guardado se registre automáticamente en su hoja de cálculo en la nube.</p>
       <div class="toolbar">
-        <input id="webhookInput" type="url" style="flex:1;min-width:300px" placeholder="https://prod-xx.westus.logic.azure.com:443/workflows/...">
+        <input id="webhookInput" type="url" style="flex:1;min-width:300px" placeholder="https://script.google.com/macros/s/.../exec">
         <button class="btn primary" onclick="saveWebhook()">Guardar enlace de sincronización</button>
       </div>
       <div id="syncStatus" class="small" style="margin-bottom:16px"></div>
@@ -752,7 +752,7 @@ async function syncToCloudExcel(payload){
   try{
     const res = await fetch(url, {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
+      headers: {"Content-Type": "text/plain;charset=utf-8"},
       body: JSON.stringify(payload)
     });
     return res.ok;
@@ -813,7 +813,7 @@ async function saveUpdate(){
   saveDB();
 
   const synced = await syncToCloudExcel(payload);
-  const msgSync = db.webhookUrl ? (synced ? "\n✓ Sincronizado con la base de datos Excel en la nube." : "\n⚠ Guardado localmente (verifique conexión con Power Automate).") : "";
+  const msgSync = db.webhookUrl ? (synced ? "\n✓ Sincronizado con la base de datos Google Sheets." : "\n⚠ Guardado localmente (verifique la URL de Google Apps Script).") : "";
   alert(`Reporte de ${period} ${year} guardado correctamente.${msgSync}`);
   clearEntry();
 }
@@ -1180,7 +1180,7 @@ function updatePreview(){
   const whInput = document.getElementById("webhookInput");
   if(whInput && document.activeElement !== whInput) whInput.value = db.webhookUrl || "";
   const st = document.getElementById("syncStatus");
-  if(st) st.innerHTML = db.webhookUrl ? `<span class="badge ok">Sincronización activa con Power Automate / Excel</span>` : `<span class="badge warn">Modo local activo (pegue una URL de Power Automate para enviar datos a Excel)</span>`;
+  if(st) st.innerHTML = db.webhookUrl ? `<span class="badge ok">Sincronización activa con Google Sheets / Apps Script</span>` : `<span class="badge warn">Modo local activo (pegue la URL de Google Apps Script para enviar datos a Google Sheets)</span>`;
   document.getElementById("dataPreview").textContent=JSON.stringify({
     totalActividades: db.activities.length,
     totalRegistros: db.updates.length,
